@@ -1,6 +1,6 @@
 import Transaction from 'arweave/node/lib/transaction';
 import { sync as globSync } from 'glob';
-import { join, resolve, isAbsolute } from 'path';
+import { join, resolve, isAbsolute, dirname } from 'path';
 import { Command } from '../command';
 import { File } from '../lib/file';
 import chalk from 'chalk';
@@ -111,8 +111,10 @@ export class DeployDirCommand extends Command {
                 await this.arweave.transactions.sign(transaction, key);
 
                 transactions.push(transaction);
-
                 pathMap[asset.path] = { id: transaction.id };
+                if (indexPath && asset.path.endsWith(indexPath)) {
+                    pathMap[asset.path.substr(0, asset.path.length-indexPath.length)] = { id: transaction.id }
+                }
 
                 this.print(
                     `${transaction.id} ${File.bytesForHumans(data.byteLength).padEnd(12)} ${this.arweave.ar
@@ -196,7 +198,7 @@ export class DeployDirCommand extends Command {
         ]);
 
         await uploadTransactions(this.arweave, [manifestTx, ...transactions]);
-
+        
         this.print([
             ``,
             `Your files are being deployed! 🚀`,
